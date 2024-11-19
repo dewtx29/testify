@@ -1169,7 +1169,7 @@ func Test_Mock_Return_NotBefore_Orphan_Call(t *testing.T) {
 
 func Test_Mock_findExpectedCall(t *testing.T) {
 
-	m := new(Mock)
+	m := NewMock()
 	m.On("One", 1).Return("one")
 	m.On("Two", 2).Return("two")
 	m.On("Two", 3).Return("three")
@@ -1188,7 +1188,7 @@ func Test_Mock_findExpectedCall(t *testing.T) {
 
 func Test_Mock_findExpectedCall_For_Unknown_Method(t *testing.T) {
 
-	m := new(Mock)
+	m := NewMock()
 	m.On("One", 1).Return("one")
 	m.On("Two", 2).Return("two")
 	m.On("Two", 3).Return("three")
@@ -1201,7 +1201,7 @@ func Test_Mock_findExpectedCall_For_Unknown_Method(t *testing.T) {
 
 func Test_Mock_findExpectedCall_Respects_Repeatability(t *testing.T) {
 
-	m := new(Mock)
+	m := NewMock()
 	m.On("One", 1).Return("one")
 	m.On("Two", 2).Return("two").Once()
 	m.On("Two", 3).Return("three").Twice()
@@ -1976,7 +1976,7 @@ func Test_WaitUntil_Parallel(t *testing.T) {
 }
 
 func Test_MockMethodCalled(t *testing.T) {
-	m := new(Mock)
+	m := NewMock()
 	m.On("foo", "hello").Return("world")
 
 	retArgs := m.MethodCalled("foo", "hello")
@@ -1986,7 +1986,7 @@ func Test_MockMethodCalled(t *testing.T) {
 }
 
 func Test_MockMethodCalled_Panic(t *testing.T) {
-	m := new(Mock)
+	m := NewMock()
 	m.On("foo", "hello").Panic("world panics")
 
 	require.PanicsWithValue(t, "world panics", func() { m.MethodCalled("foo", "hello") })

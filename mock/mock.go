@@ -311,6 +311,12 @@ type Mock struct {
 	mutex sync.Mutex
 }
 
+func NewMock() *Mock {
+	return &Mock{
+		assertions: make(map[string]bool),
+	}
+}
+
 // String provides a %v format string for Mock.
 // Note: this is used implicitly by Arguments.Diff if a Mock is passed.
 // It exists because go's default %v formatting traverses the struct
