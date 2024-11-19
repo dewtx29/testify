@@ -1,4 +1,4 @@
-module github.com/stretchr/testify
+module github.com/lumiluminousai/testify
 
 // This should match the minimum supported version that is tested in
 // .github/workflows/main.yml
@@ -13,4 +13,4 @@ require (
 
 // Break dependency cycle with objx.
 // See https://github.com/stretchr/objx/pull/140
-exclude github.com/stretchr/testify v1.8.2
+exclude github.com/lumiluminousai/testify v1.8.2

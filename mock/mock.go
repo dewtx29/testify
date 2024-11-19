@@ -15,7 +15,7 @@ import (
 	"github.com/pmezard/go-difflib/difflib"
 	"github.com/stretchr/objx"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/lumiluminousai/testify/assert"
 )
 
 // regex for GCCGO functions
