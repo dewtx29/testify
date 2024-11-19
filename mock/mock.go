@@ -687,6 +687,11 @@ func (m *Mock) AssertNumberOfCalls(t TestingT, methodName string, expectedCalls 
 		}
 	}
 
+	// Ensure the map is initialized
+	if m.assertions == nil {
+		m.assertions = make(map[string]bool)
+	}
+
 	// Mark as asserted
 	m.assertions[methodName] = true
 
