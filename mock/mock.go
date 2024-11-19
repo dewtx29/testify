@@ -291,6 +291,8 @@ func InOrder(calls ...*Call) {
 // For an example of its usage, refer to the "Example Usage" section at the top
 // of this document.
 type Mock struct {
+	assertions map[string]bool
+
 	// Represents the calls that are expected of
 	// an object.
 	ExpectedCalls []*Call
@@ -490,6 +492,11 @@ func (m *Mock) MethodCalled(methodName string, arguments ...interface{}) Argumen
 	// TODO: could combine expected and closes in single loop
 	found, call := m.findExpectedCall(methodName, arguments...)
 
+	// Track calls to enforce AssertNumberOfCalls later
+	if _, exists := m.assertions[methodName]; !exists {
+		m.assertions[methodName] = false // Ensure this will be flagged if not asserted
+	}
+
 	if found < 0 {
 		// expected call found, but it has already been called with repeatable times
 		if call != nil {
@@ -621,6 +628,13 @@ func (m *Mock) AssertExpectations(t TestingT) bool {
 	defer m.mutex.Unlock()
 	var failedExpectations int
 
+	for methodName, isAsserted := range m.assertions {
+		if !isAsserted {
+			t.Errorf("Missing AssertNumberOfCalls for method '%s'.", methodName)
+			failedExpectations++
+		}
+	}
+
 	// iterate through each expectation
 	expectedCalls := m.expectedCalls()
 	for _, expectedCall := range expectedCalls {
@@ -661,6 +675,10 @@ func (m *Mock) AssertNumberOfCalls(t TestingT, methodName string, expectedCalls 
 			actualCalls++
 		}
 	}
+
+	// Mark as asserted
+	m.assertions[methodName] = true
+
 	return assert.Equal(t, expectedCalls, actualCalls, fmt.Sprintf("Expected number of calls (%d) does not match the actual number of calls (%d).", expectedCalls, actualCalls))
 }
 
