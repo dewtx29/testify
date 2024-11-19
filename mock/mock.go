@@ -498,6 +498,11 @@ func (m *Mock) MethodCalled(methodName string, arguments ...interface{}) Argumen
 	// TODO: could combine expected and closes in single loop
 	found, call := m.findExpectedCall(methodName, arguments...)
 
+	// Ensure the map is initialized
+	if m.assertions == nil {
+		m.assertions = make(map[string]bool)
+	}
+
 	// Track calls to enforce AssertNumberOfCalls later
 	if _, exists := m.assertions[methodName]; !exists {
 		m.assertions[methodName] = false // Ensure this will be flagged if not asserted
