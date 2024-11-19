@@ -664,9 +664,15 @@ func (m *Mock) AssertExpectations(t TestingT) bool {
 }
 
 func (m *Mock) checkExpectation(call *Call) (bool, string) {
+	if !call.optional && call.Repeatability == 0 && call.totalCalls == 0 {
+		// If the expectation is explicitly for zero calls, consider it satisfied
+		return true, fmt.Sprintf("PASS:\t%s(%s) - Expected no calls, and none were made.", call.Method, call.Arguments.String())
+	}
+
 	if !call.optional && !m.methodWasCalled(call.Method, call.Arguments) && call.totalCalls == 0 {
 		return false, fmt.Sprintf("FAIL:\t%s(%s)\n\t\tat: %s", call.Method, call.Arguments.String(), call.callerInfo)
 	}
+
 	if call.Repeatability > 0 {
 		return false, fmt.Sprintf("FAIL:\t%s(%s)\n\t\tat: %s", call.Method, call.Arguments.String(), call.callerInfo)
 	}
