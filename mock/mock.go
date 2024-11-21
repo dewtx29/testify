@@ -665,12 +665,48 @@ func (m *Mock) AssertExpectations(t TestingT) bool {
 
 func (m *Mock) checkExpectation(call *Call) (bool, string) {
 	if !call.optional && !m.methodWasCalled(call.Method, call.Arguments) && call.totalCalls == 0 {
-		return false, fmt.Sprintf("FAIL:\t%s(%s)\n\t\tat: %s", call.Method, call.Arguments.String(), call.callerInfo)
+		return false, fmt.Sprintf(
+			"Expected method '%s' with arguments:\n%s\nwas not called.\nExpectation set at:\n%s",
+			call.Method,
+			formatArguments(call.Arguments),
+			formatCallerInfo(call.callerInfo),
+		)
 	}
 	if call.Repeatability > 0 {
-		return false, fmt.Sprintf("FAIL:\t%s(%s)\n\t\tat: %s", call.Method, call.Arguments.String(), call.callerInfo)
+		return false, fmt.Sprintf(
+			"Expected method '%s' with arguments:\n%s\nwas called fewer times than expected.\nExpectation set at:\n%s",
+			call.Method,
+			formatArguments(call.Arguments),
+			formatCallerInfo(call.callerInfo),
+		)
 	}
 	return true, fmt.Sprintf("PASS:\t%s(%s)", call.Method, call.Arguments.String())
+}
+
+// formatArguments formats the expected arguments for display.
+func formatArguments(args Arguments) string {
+	var formattedArgs []string
+	for i, arg := range args {
+		formattedArgs = append(formattedArgs, fmt.Sprintf("    %d: %v", i, arg))
+	}
+	return strings.Join(formattedArgs, "\n")
+}
+
+// formatCallerInfo formats the caller information for display.
+func formatCallerInfo(callerInfo []string) string {
+	// Exclude unhelpful paths and focus on the relevant file and line number.
+	var formattedInfo []string
+	for _, info := range callerInfo {
+		formattedInfo = append(formattedInfo, simplifyFilePath(info))
+	}
+	return strings.Join(formattedInfo, "\n")
+}
+
+// simplifyFilePath removes unnecessary parts of the file path.
+func simplifyFilePath(path string) string {
+	// You can adjust this function to strip the path as needed.
+	// For example, remove GOPATH or project-specific prefixes.
+	return path
 }
 
 // AssertNumberOfCalls asserts that the method was called expectedCalls times.
