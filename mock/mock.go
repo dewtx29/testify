@@ -742,6 +742,13 @@ func (m *Mock) AssertCalled(t TestingT, methodName string, arguments ...interfac
 	}
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
+
+	// Check if AssertNumberOfCalls has been called for this method
+	if m.assertions == nil || !m.assertions[methodName] {
+		t.Errorf("AssertNumberOfCalls must be called before AssertCalled for method '%s'.", methodName)
+		return false
+	}
+
 	if !m.methodWasCalled(methodName, arguments) {
 		var calledWithArgs []string
 		for _, call := range m.calls() {
@@ -765,6 +772,13 @@ func (m *Mock) AssertNotCalled(t TestingT, methodName string, arguments ...inter
 	}
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
+
+	// Check if AssertNumberOfCalls has been called for this method
+	if m.assertions == nil || !m.assertions[methodName] {
+		t.Errorf("AssertNumberOfCalls must be called before AssertNotCalled for method '%s'.", methodName)
+		return false
+	}
+
 	if m.methodWasCalled(methodName, arguments) {
 		return assert.Fail(t, "Should not have called with given arguments",
 			fmt.Sprintf("Expected %q to not have been called with:\n%v\nbut actually it was.", methodName, arguments))
