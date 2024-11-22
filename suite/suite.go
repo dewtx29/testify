@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/stretchr/testify/require"
+	"github.com/lumiluminousai/testify/assert"
+	"github.com/lumiluminousai/testify/require"
 )
 
 var allTestsFilter = func(_, _ string) (bool, error) { return true, nil }

@@ -15,7 +15,7 @@ import (
 	"github.com/pmezard/go-difflib/difflib"
 	"github.com/stretchr/objx"
 
-	"github.com/stretchr/testify/assert"
+	"github.com/lumiluminousai/testify/assert"
 )
 
 // regex for GCCGO functions
@@ -291,6 +291,8 @@ func InOrder(calls ...*Call) {
 // For an example of its usage, refer to the "Example Usage" section at the top
 // of this document.
 type Mock struct {
+	assertions map[string]bool
+
 	// Represents the calls that are expected of
 	// an object.
 	ExpectedCalls []*Call
@@ -307,6 +309,12 @@ type Mock struct {
 	testData objx.Map
 
 	mutex sync.Mutex
+}
+
+func NewMock() *Mock {
+	return &Mock{
+		assertions: make(map[string]bool),
+	}
 }
 
 // String provides a %v format string for Mock.
@@ -490,6 +498,16 @@ func (m *Mock) MethodCalled(methodName string, arguments ...interface{}) Argumen
 	// TODO: could combine expected and closes in single loop
 	found, call := m.findExpectedCall(methodName, arguments...)
 
+	// Ensure the map is initialized
+	if m.assertions == nil {
+		m.assertions = make(map[string]bool)
+	}
+
+	// Track calls to enforce AssertNumberOfCalls later
+	if _, exists := m.assertions[methodName]; !exists {
+		m.assertions[methodName] = false // Ensure this will be flagged if not asserted
+	}
+
 	if found < 0 {
 		// expected call found, but it has already been called with repeatable times
 		if call != nil {
@@ -621,6 +639,13 @@ func (m *Mock) AssertExpectations(t TestingT) bool {
 	defer m.mutex.Unlock()
 	var failedExpectations int
 
+	for methodName, isAsserted := range m.assertions {
+		if !isAsserted {
+			t.Errorf("Missing AssertNumberOfCalls for method '%s'.", methodName)
+			failedExpectations++
+		}
+	}
+
 	// iterate through each expectation
 	expectedCalls := m.expectedCalls()
 	for _, expectedCall := range expectedCalls {
@@ -640,12 +665,48 @@ func (m *Mock) AssertExpectations(t TestingT) bool {
 
 func (m *Mock) checkExpectation(call *Call) (bool, string) {
 	if !call.optional && !m.methodWasCalled(call.Method, call.Arguments) && call.totalCalls == 0 {
-		return false, fmt.Sprintf("FAIL:\t%s(%s)\n\t\tat: %s", call.Method, call.Arguments.String(), call.callerInfo)
+		return false, fmt.Sprintf(
+			"Expected method '%s' with arguments:\n%s\nwas not called.\nExpectation set at:\n%s",
+			call.Method,
+			formatArguments(call.Arguments),
+			formatCallerInfo(call.callerInfo),
+		)
 	}
 	if call.Repeatability > 0 {
-		return false, fmt.Sprintf("FAIL:\t%s(%s)\n\t\tat: %s", call.Method, call.Arguments.String(), call.callerInfo)
+		return false, fmt.Sprintf(
+			"Expected method '%s' with arguments:\n%s\nwas called fewer times than expected.\nExpectation set at:\n%s",
+			call.Method,
+			formatArguments(call.Arguments),
+			formatCallerInfo(call.callerInfo),
+		)
 	}
 	return true, fmt.Sprintf("PASS:\t%s(%s)", call.Method, call.Arguments.String())
+}
+
+// formatArguments formats the expected arguments for display.
+func formatArguments(args Arguments) string {
+	var formattedArgs []string
+	for i, arg := range args {
+		formattedArgs = append(formattedArgs, fmt.Sprintf("    %d: %v", i, arg))
+	}
+	return strings.Join(formattedArgs, "\n")
+}
+
+// formatCallerInfo formats the caller information for display.
+func formatCallerInfo(callerInfo []string) string {
+	// Exclude unhelpful paths and focus on the relevant file and line number.
+	var formattedInfo []string
+	for _, info := range callerInfo {
+		formattedInfo = append(formattedInfo, simplifyFilePath(info))
+	}
+	return strings.Join(formattedInfo, "\n")
+}
+
+// simplifyFilePath removes unnecessary parts of the file path.
+func simplifyFilePath(path string) string {
+	// You can adjust this function to strip the path as needed.
+	// For example, remove GOPATH or project-specific prefixes.
+	return path
 }
 
 // AssertNumberOfCalls asserts that the method was called expectedCalls times.
@@ -661,6 +722,15 @@ func (m *Mock) AssertNumberOfCalls(t TestingT, methodName string, expectedCalls 
 			actualCalls++
 		}
 	}
+
+	// Ensure the map is initialized
+	if m.assertions == nil {
+		m.assertions = make(map[string]bool)
+	}
+
+	// Mark as asserted
+	m.assertions[methodName] = true
+
 	return assert.Equal(t, expectedCalls, actualCalls, fmt.Sprintf("Expected number of calls (%d) does not match the actual number of calls (%d).", expectedCalls, actualCalls))
 }
 

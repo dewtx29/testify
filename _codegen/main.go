@@ -28,7 +28,7 @@ import (
 )
 
 var (
-	pkg       = flag.String("assert-path", "github.com/stretchr/testify/assert", "Path to the assert package")
+	pkg       = flag.String("assert-path", "github.com/lumiluminousai/testify/assert", "Path to the assert package")
 	includeF  = flag.Bool("include-format-funcs", false, "include format functions such as Errorf and Equalf")
 	outputPkg = flag.String("output-package", "", "package for the resulting code")
 	tmplFile  = flag.String("template", "", "What file to load the function template from")
@@ -300,7 +300,7 @@ func (f *testFunc) CommentWithoutT(receiver string) string {
 }
 
 // Standard header https://go.dev/s/generatedcode.
-var headerTemplate = `// Code generated with github.com/stretchr/testify/_codegen; DO NOT EDIT.
+var headerTemplate = `// Code generated with github.com/lumiluminousai/testify/_codegen; DO NOT EDIT.
 
 package {{.Name}}
 
